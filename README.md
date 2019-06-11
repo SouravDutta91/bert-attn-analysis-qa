@@ -1,5 +1,5 @@
-# bert-attn-analysis-qa
-BERT Attention analysis for QA Explainability (SQuAD 2.0)
+# Analysis of Attention in BERT for QA Explainability
+We are using the SQuAD 2.0 datast for this task.
 
 ## Dependencies
 
