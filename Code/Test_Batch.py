@@ -1,3 +1,4 @@
+import sys
 import numpy as np
 import pandas as pd
 import argparse
@@ -12,7 +13,8 @@ from torch.utils.data import (DataLoader, RandomSampler, SequentialSampler,
 from tqdm import tqdm
 from termcolor import colored, cprint
 
-from bertviz.attention_details import AttentionDetailsData, show
+from bertviz.attention_details import AttentionDetailsData, show, _get_attention_details
+from bertviz.pytorch_pretrained_bert import BertModel as BertAttentionModel
 
 
 class SquadExample(object):
@@ -491,7 +493,33 @@ def predict(examples, all_features, all_results, max_answer_length):
     return all_predictions
         
 
-                
+# this function gets the attention in each layer
+
+def get_attn_details(attn_json, tokens):
+
+    total_attn = []
+    
+    for layer in attn_json:
+        layer_attn = [0 for _ in range(len(tokens))]
+        
+        for head in layer:
+            for token_a in head:
+                layer_attn = [sum(x) for x in zip(layer_attn, token_a)]
+        #print('\nLayer', attn_json.index(layer) + 1, ':\n', layer_attn)
+        total_attn.append(layer_attn)
+    
+    return total_attn
+
+
+# this function gets the total sum of attention values
+# in the entire network
+
+def get_total_attn(attn_layers):
+    
+    total_attn = [0 for _ in range(len(attn_layers[0]))]
+    for attn_vector in attn_layers:
+        total_attn = [sum(x) for x in zip(total_attn, attn_vector)]
+    return total_attn
 
 RawResult = collections.namedtuple("RawResult",
                                    ["unique_id", "start_logits", "end_logits"])
@@ -598,7 +626,7 @@ def main():
                                              end_logits=end_logits))
                 
        
-        output = predict(examples, features, all_results,args.max_answer_length)
+        output = predict(examples, features, all_results, args.max_answer_length)
         predictions.append(output)
  
    
@@ -616,13 +644,37 @@ def main():
         prediction = colored(predictions[math.floor(example.unique_id/12)][example], 'green')
         print(prediction)
         print('\n')
-        sentence_a = example.para_text
-        sentence_b = predictions[math.floor(example.unique_id/12)][example]
 
-    model = BertModel(config)
-    details_data = AttentionDetailsData(model, tokenizer)
+    sentence_a = ' '.join(token for token in examples[0].doc_tokens)
+    sentence_b = examples[0].question_text
+
+    #sentence_a = 'The cat sat on the mat'
+    #sentence_b = 'The cat lay on the rug'
+
+    attn_model = BertAttentionModel.from_pretrained('bert-base-uncased')
+    details_data = AttentionDetailsData(attn_model, BertTokenizer.from_pretrained('bert-base-uncased'))
     tokens_a, tokens_b, queries, keys, atts = details_data.get_data(sentence_a, sentence_b)
-    show(tokens_a, tokens_b, queries, keys, atts)
+
+    attn_self_json = _get_attention_details(tokens_a, tokens_b, queries, keys, atts)['bb']['att']
+    attn_pair_json = _get_attention_details(tokens_a, tokens_b, queries, keys, atts)['ba']['att']
+    
+    # individual attention values of each layer (self attention and pair wise)
+
+    attn_self_json = get_attn_details(attn_self_json, tokens_b)
+    attn_pair_json = get_attn_details(attn_pair_json, tokens_a)
+
+    # sum of all attention values of 12 layers (self attention and pair wise)
+
+    total_self_attn = get_total_attn(attn_self_json)
+    total_pair_attn = get_total_attn(attn_pair_json)
+
+    # these attention values can be used for further tasks
+
+    # print(attn_self_json, '\n')
+    # print(attn_self_json, '\n')
+    # print(total_self_attn, '\n')
+    # print(total_pair_attn, '\n')
+
 
 if __name__ == "__main__":
     main()

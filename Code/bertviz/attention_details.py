@@ -63,7 +63,6 @@ def show(tokens_a, tokens_b, query_vectors, key_vectors, attn):
 
 def _get_attention_details(tokens_a, tokens_b, query_vectors, key_vectors, atts):
     """Compute representation of the attention to pass to the d3 visualization
-
     Args:
       tokens_a: tokens in sentence A
       tokens_b: tokens in sentence B
@@ -71,7 +70,6 @@ def _get_attention_details(tokens_a, tokens_b, query_vectors, key_vectors, atts)
       key_vectors: numpy array, [num_layers, batch_size, num_heads, seq_len, vector_size]
       atts: numpy array, attention
           [num_layers, batch_size, num_heads, seq_len, seq_len]
-
     Returns:
       Dictionary of query/key representations with the structure:
       {
@@ -88,7 +86,6 @@ def _get_attention_details(tokens_a, tokens_b, query_vectors, key_vectors, atts)
         'queries': list of query vector arrays, one for each layer. Each is nested list, shape (num_heads, source_seq_len, vector_size)
         'keys': list of key vector arrays, one for each layer. Each is nested list, shape (num_heads, target_seq_len, vector_size)
         'att': list of inter attentions matrices, one for each layer. Each is of shape [num_heads, source_seq_len, target_seq_len]
-
       }
     """
 
