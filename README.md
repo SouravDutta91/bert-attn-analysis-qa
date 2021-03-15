@@ -7,7 +7,7 @@ Analysis of Attention in BERT for QA Explainability. There has been great succes
 
 ## Model
 
-https://drive.google.com/file/d/1hktnjAJOdOwPxTK3R-KST9-kUQFYPusM/view?usp=sharing
+For our experiment, we had used an available BERT model pre-trained on the SQuaD 2.0 dataset. You can use any such pre-trained BERT model available online or train your own model if you have enough resources.
 
 ## Run the script
 
